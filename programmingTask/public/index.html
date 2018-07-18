@@ -1,0 +1,133 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="assets/js/jquery-3.2.1.js"></script>  
+</head>
+
+<body>
+     <!--Imput Label-->
+    <label for="address">Data: 
+        <input id="address" placeholder="ENS Address as hexadezmal number with leading 0x"size="42">
+        <input id="eventFilter" placeholder="Filter for Events, leave blank to show all Events"size="38">
+        <input id="age" placeholder="Max age of Events in hours" maxlength="5"size="23">
+    </label>
+    <input id="submit" type="button" value="search" onclick="start();" /> <br>
+    
+    <!--Field for return data-->
+    <br><p1 id = 'error'></p1> <br>
+    <p1 id = 'info'></p1>
+
+    <!--List for data-->
+    <ul id='ul1'></ul>
+</body>
+</html>
+
+<script>
+
+    function httpGet(theUrl){
+        //REST request via XMLhttp
+        var request = new XMLHttpRequest();
+        request.open( "GET", theUrl, false ); 
+        // false for synchronous request (<operation>, <url>, <synchronous>)
+        request.send( null );
+        if (request.status == 200){
+            //if successfull return it
+            return {
+                error: false,
+                message: request.responseText
+            }
+        }
+        if (request.status == 400){
+            //if error, return it
+            return {
+                error: true,
+                message: request.responseText
+            }
+        }
+    }
+
+    function drawData(data){
+        //Field for ouput
+        var info = document.getElementById('info');
+        //Insert statistics
+        info.insertAdjacentHTML('beforeend', `${data.length+1} Event(s) found in the last ${document.getElementById('age').value} hour(s)<br>`);
+        var eventFilter = document.getElementById('eventFilter').value;
+        var age = document.getElementById('age').value;
+        if (eventFilter == ''){
+            info.insertAdjacentHTML('beforeend', `Displaying all Events`); 
+        }
+        else{
+            info.insertAdjacentHTML('beforeend', `Displaying only ${eventFilter} events`); 
+        }
+        info.insertAdjacentHTML('beforeend', `<br>Searched ${(age*60*60)/15} Blocks`); 
+        //Insert received Data accepts nested Architecture up to 3 stages, if more required loop more
+        var list = document.getElementById('ul1');
+        for (var i = 0; i <= data.length; i++)
+        {
+            list.insertAdjacentHTML('beforeend', `<b>${i}:`)
+            for (var x in data[0]){
+                list.insertAdjacentHTML('beforeend', `<li><b>${x}</li>`)
+                if (typeof(data[0][x]) == 'object'){
+                    for(var y in data[0][x]){
+                        list.insertAdjacentHTML('beforeend', `<ul>${data[0][x][y]}</ul>`)
+                    }
+                }
+                else {
+                    list.insertAdjacentHTML('beforeend', `<ul>${data[0][x]}</ul>`)
+                }
+            }
+            list.insertAdjacentHTML('beforeend', '<br><br>')
+        }
+    }
+
+    function start(){
+        document.getElementById('error').innerHTML = 'LOADING DATA, please wait a moment';
+        document.getElementById('ul1').innerHTML = '';
+        document.getElementById('info').innerHTML = '';
+        //Emptying ul1 and info
+
+        var address = document.getElementById('address').value;
+        var eventFilter = document.getElementById('eventFilter').value;
+        var age = document.getElementById('age').value;
+        var go = {
+            error: false,
+            message: ''
+        };
+        //Validation and setting default values
+        if (age == '' || age == null){
+            go.error = true;
+            go.message = 'ERROR, Age musst be given number';
+        }
+        if (typeof(age-1) != 'number'){
+            go.error = true
+            go.message = 'ERROR, Age musst be a number';
+        }
+        if (address == '' || address == null){
+            go.error = true;
+            go.message = 'ERROR, Address musst be given';
+        }
+        if (eventFilter == '' || eventFilter == null){
+            eventFilter = 'allEvents';
+        }
+        
+        if (go.error == true){
+            //If there is an error display it
+            document.getElementById('error').innerHTML = JSON.stringify(go.message);
+        }
+        else if(go.error == false){
+            //If no error, get Data via api
+            var data = httpGet(`http://${window.location.host}/api/contracts/${address}/${eventFilter}/${age}`);
+            if (data.error == true){
+                //If error display error
+                document.getElementById('error').innerHTML = data.message;
+            }
+            else if (data.error == false){
+                //If no error draw Data
+                document.getElementById('error').innerHTML = '';
+                drawData(JSON.parse(data.message))
+            }    
+        }
+            
+    };
+
+</script>

@@ -1,0 +1,42 @@
+#Set up
+
+-> npm must be installed
+
+    -Use command 'npm i' in the location folder, this will install all the needed Packages.
+    -Start the Server with the command 'node index.js' or similar syntax.
+    -The console Log will show assigned Port, if no enviromental Port is given Port 3000 is used.
+        -> To assign a enviromental Port use 'export PORT=<PORT_number>'.
+    -Interact with the server using your webbrowser with '<IP_of_server>:<PORT_of_server>/'
+
+#Note
+    This Implementation is only a prof of concept:
+
+    ->If you request a Age over 18 hours it is set to 18 hours, because with an age over 18 a Timeout accours
+    Possible SOLUTION:  rewrite the getEvents(abi, address, eventFilter, age) Function to call itself multiple times 
+                        setting starting and endBlock to get all the requested Data
+
+    -> Look of index.html is functional and minimalistic to prov that the REST API works
+
+-> It works with Firefox, Safari is kinda buggy and jumps between input fields, Firefox is recommended.
+
+
+#Used Packages
+Web3    -> Interaction with blockchains
+Axios   -> Interaction with REST API
+express -> Host own Webserver/REST API
+
+#REST API
+GET /api/contracts/<address>/<eventFilter>/<age>
+    ->Returnes Events with the name of <eventFilter> of the contract <address> in last <age> hours, to
+    return all Events use 'allEvents'
+
+#exported Functions
+    getContracts(address) 
+        -> returnes the Contract ABI from given <address> via the etherscan api
+
+    getEvents(abi, address, eventFilter, age)
+        -> returns the Contract events from the given <address> and <abi> in the 
+        last <time> hours using the web3 contract.getPastEvents Function
+            -> connects with Main Ethereum Net via infura using 'YluGFjpmE6UtZnJk5s4M'
+            as account
+
